@@ -1,36 +1,64 @@
-import 'react-native-url-polyfill/auto'
-import { useEffect } from 'react'
-import { Slot, useRouter, useSegments } from 'expo-router'
-import { Session } from '@supabase/supabase-js'
+import { Stack, useRouter, useSegments } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import "~/global.css";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { AuthInitializer } from "~/components/initializers/auth";
+import { useAuth } from "~/hooks/use-auth";
 
-import { supabase } from '~/lib/supabase'
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
+
+export const unstable_settings = {
+  anchor: "(tabs)",
+};
 
 export default function RootLayout() {
-  const segments = useSegments()
-  const router = useRouter()
+  const router = useRouter();
+  const segments = useSegments();
+  const { isAuthenticated, isAuthenticatedLoading } = useAuth();
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        handleSessionChange(session)
-      },
-    )
+    if (isAuthenticatedLoading) return;
+    SplashScreen.hideAsync();
+  }, [isAuthenticatedLoading]);
 
-    return () => {
-      authListener.subscription.unsubscribe()
+  useEffect(() => {
+    if (isAuthenticatedLoading) return;
+
+    const inOnboarding = segments[0] === "onboarding";
+    const inAuth = segments[0] === "(auth)";
+
+    // User hasn't completed onboarding and isn't authenticated
+    if (!isAuthenticated) {
+      if (!inOnboarding && !inAuth) {
+        router.replace("/onboarding");
+      }
     }
-  }, [])
-
-  const handleSessionChange = (session: Session | null) => {
-    const inAuthGroup = segments[0] === '(auth)'
-
-    if (session && !inAuthGroup) {
-      router.replace('/(tabs)')
+    // User has completed onboarding or is authenticated
+    else if (isAuthenticated) {
+      if (inOnboarding || inAuth) {
+        router.replace("/(tabs)");
+      }
     }
-    else if (!session) {
-      router.replace('/(auth)/login')
-    }
-  }
+  }, [isAuthenticated, isAuthenticatedLoading, segments, router]);
 
-  return <Slot />
+  return (
+    <GestureHandlerRootView className="flex-1">
+      <AuthInitializer />
+      {isAuthenticatedLoading ? null : (
+        <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack>
+          <StatusBar style="auto" />
+        </SafeAreaView>
+      )}
+    </GestureHandlerRootView>
+  );
 }

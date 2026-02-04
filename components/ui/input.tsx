@@ -1,7 +1,7 @@
 import * as React from "react";
 import { TextInput, type TextInputProps, View } from "react-native";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { Label } from "~/components/ui/label";
+import { cn } from "~/lib/utils";
 
 type InputFormat = "integer" | undefined;
 
@@ -29,11 +29,15 @@ function Input({
   value,
   format,
   label,
+  leftIcon,
+  rightIcon,
   ...props
 }: TextInputProps & {
   ref?: React.RefObject<TextInput>;
   format?: InputFormat;
   label?: string;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 }) {
   const isInteger = format === "integer";
 
@@ -59,18 +63,31 @@ function Input({
   return (
     <View className="flex-col gap-2">
       {label && <Label>{label}</Label>}
-      <TextInput
-        className={cn(
-          "web:flex h-10 native:h-12 web:w-full rounded-md border border-input bg-input-background px-3 web:py-2 native:text-lg text-base text-foreground native:leading-[1.25] web:ring-offset-background file:border-0 file:bg-transparent file:font-medium placeholder:text-muted-foreground web:focus-visible:outline-none web:focus-visible:ring-2 web:focus-visible:ring-ring web:focus-visible:ring-offset-2 lg:text-sm",
-          props.editable === false && "web:cursor-not-allowed opacity-50",
-          className,
+      <View className="relative flex-row items-center">
+        {leftIcon && <View className="absolute left-3 z-10">{leftIcon}</View>}
+        <TextInput
+          className={cn(
+            "web:flex h-10 native:h-12 web:w-full flex-1 rounded-md border border-input bg-input-background px-3 web:py-2 native:text-lg text-base text-foreground native:leading-[1.25] web:ring-offset-background file:border-0 file:bg-transparent file:font-medium placeholder:text-muted-foreground web:focus-visible:outline-none web:focus-visible:ring-2 web:focus-visible:ring-ring web:focus-visible:ring-offset-2 lg:text-sm",
+            props.editable === false && "web:cursor-not-allowed opacity-50",
+            leftIcon && "pl-10",
+            rightIcon && "pr-10",
+            className,
+          )}
+          placeholderClassName={cn(
+            "text-muted-foreground",
+            placeholderClassName,
+          )}
+          keyboardType={
+            isInteger ? (keyboardType ?? "number-pad") : keyboardType
+          }
+          value={displayValue}
+          onChangeText={handleChangeText}
+          {...props}
+        />
+        {rightIcon && (
+          <View className="absolute right-3 z-10">{rightIcon}</View>
         )}
-        placeholderClassName={cn("text-muted-foreground", placeholderClassName)}
-        keyboardType={isInteger ? (keyboardType ?? "number-pad") : keyboardType}
-        value={displayValue}
-        onChangeText={handleChangeText}
-        {...props}
-      />
+      </View>
     </View>
   );
 }

@@ -4,7 +4,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
-import { cn } from "@/lib/utils";
+import { cn } from "~/lib/utils";
 
 const Progress = React.forwardRef<
   React.ElementRef<typeof View>,

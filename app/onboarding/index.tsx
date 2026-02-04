@@ -1,40 +1,60 @@
+import { Link } from "expo-router";
+import { useColorScheme, View } from "react-native";
 
-import { View, Text, StyleSheet } from 'react-native'
-import { Link } from 'expo-router'
-
-import { Button } from '~/components/ui/button'
+import { Button } from "~/components/ui/button";
+import { Text } from "~/components/ui/text";
 
 export default function WelcomeScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        We notice the quiet changes, so you don't face them alone
-      </Text>
-      <Link href="/onboarding/how-it-works" asChild>
-        <Button>
-          <Text>Get Started</Text>
-        </Button>
-      </Link>
-      <Link href="/(auth)/login" asChild>
-        <Button variant="link">
-          <Text>Sign In</Text>
-        </Button>
-      </Link>
-    </View>
-  )
-}
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const circleColor = isDark ? "#374151" : "#e5e7eb";
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-})
+  return (
+    <View className="flex-1 justify-between bg-background px-8 py-16">
+      {/* Top spacer */}
+      <View />
+
+      {/* Center content */}
+      <View className="items-center gap-8">
+        {/* Abstract icon - nested circles */}
+        <View className="items-center justify-center">
+          <View
+            className="h-32 w-32 items-center justify-center rounded-full"
+            style={{ backgroundColor: circleColor }}
+          >
+            <View
+              className="h-20 w-20 items-center justify-center rounded-full"
+              style={{ backgroundColor: isDark ? "#4b5563" : "#d1d5db" }}
+            >
+              <View className="h-10 w-10 rounded-full bg-primary" />
+            </View>
+          </View>
+        </View>
+
+        {/* Tagline */}
+        <View className="gap-4">
+          <Text className="text-center font-serif text-3xl leading-tight">
+            We notice the quiet changes, so you don&apos;t face them alone
+          </Text>
+          <Text className="text-center text-muted-foreground">
+            A gentle companion for your mental wellbeing
+          </Text>
+        </View>
+      </View>
+
+      {/* Bottom buttons */}
+      <View className="gap-3">
+        <Link href="/onboarding/how-it-works" asChild>
+          <Button size="lg">
+            <Text>Get Started</Text>
+          </Button>
+        </Link>
+        <Link href="/(auth)/login" asChild>
+          <Button variant="ghost">
+            <Text>I already have an account</Text>
+          </Button>
+        </Link>
+      </View>
+    </View>
+  );
+}

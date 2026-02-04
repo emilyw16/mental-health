@@ -1,7 +1,7 @@
-import { Tabs } from 'expo-router'
-import { Home, History, Users, Settings } from 'lucide-react-native'
+import { Tabs } from "expo-router";
+import { History, Home, User, Users } from "lucide-react-native";
 
-import { HapticTab } from '~/components/haptic-tab'
+import { HapticTab } from "~/components/haptic-tab";
 
 export default function AppLayout() {
   return (
@@ -13,7 +13,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: "Home",
           tabBarIcon: ({ color }) => <Home color={color} />,
           tabBarButton: HapticTab,
         }}
@@ -21,7 +21,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="history"
         options={{
-          title: 'History',
+          title: "History",
           tabBarIcon: ({ color }) => <History color={color} />,
           tabBarButton: HapticTab,
         }}
@@ -29,19 +29,19 @@ export default function AppLayout() {
       <Tabs.Screen
         name="contacts"
         options={{
-          title: 'Contacts',
+          title: "Contacts",
           tabBarIcon: ({ color }) => <Users color={color} />,
           tabBarButton: HapticTab,
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="profile"
         options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => <Settings color={color} />,
+          title: "Profile",
+          tabBarIcon: ({ color }) => <User color={color} />,
           tabBarButton: HapticTab,
         }}
       />
     </Tabs>
-  )
+  );
 }
