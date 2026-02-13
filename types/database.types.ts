@@ -14,6 +14,42 @@ export type Database = {
   };
   public: {
     Tables: {
+      check_ins: {
+        Row: {
+          id: string;
+          user_id: string;
+          check_in_date: string;
+          log_type: string;
+          sleep_quality: string;
+          social_interaction: string;
+          energy_level: number;
+          notes: string | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          check_in_date: string;
+          log_type?: string;
+          sleep_quality: string;
+          social_interaction: string;
+          energy_level: number;
+          notes?: string | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          check_in_date?: string;
+          log_type?: string;
+          sleep_quality?: string;
+          social_interaction?: string;
+          energy_level?: number;
+          notes?: string | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
       focus_sessions: {
         Row: {
           created_at: string | null;
@@ -70,6 +106,42 @@ export type Database = {
           id?: string;
           is_premium?: boolean | null;
           stripe_customer_id?: string | null;
+        };
+        Relationships: [];
+      };
+      trusted_contacts: {
+        Row: {
+          id: string;
+          user_id: string;
+          contact_name: string;
+          contact_email: string | null;
+          contact_phone: string | null;
+          relationship: string | null;
+          can_see_details: boolean | null;
+          notification_method: string | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          contact_name: string;
+          contact_email?: string | null;
+          contact_phone?: string | null;
+          relationship?: string | null;
+          can_see_details?: boolean | null;
+          notification_method?: string | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          contact_name?: string;
+          contact_email?: string | null;
+          contact_phone?: string | null;
+          relationship?: string | null;
+          can_see_details?: boolean | null;
+          notification_method?: string | null;
+          created_at?: string | null;
         };
         Relationships: [];
       };

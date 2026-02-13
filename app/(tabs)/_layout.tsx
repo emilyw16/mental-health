@@ -42,6 +42,41 @@ export default function AppLayout() {
           tabBarButton: HapticTab,
         }}
       />
+      <Tabs.Screen
+        name="add-contact"
+        options={{
+          href: null,
+          presentation: "modal",
+        }}
+      />
+      <Tabs.Screen
+        name="check-in"
+        options={{
+          href: null,
+          presentation: "modal",
+        }}
+      />
+      <Tabs.Screen
+        name="log-sleep"
+        options={{
+          href: null,
+          presentation: "modal",
+        }}
+      />
+      <Tabs.Screen
+        name="log-social"
+        options={{
+          href: null,
+          presentation: "modal",
+        }}
+      />
+      <Tabs.Screen
+        name="log-movement"
+        options={{
+          href: null,
+          presentation: "modal",
+        }}
+      />
     </Tabs>
   );
 }

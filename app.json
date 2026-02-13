@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "replaceme",
-    "slug": "replaceme",
+    "name": "Haven",
+    "slug": "haven",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "replaceme",
+    "icon": "./assets/images/haven.png",
+    "scheme": "haven",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "com.example.replaceme",
+      "bundleIdentifier": "com.emily-app.haven",
       "usesAppleSignIn": true,
       "supportsTablet": true,
       "infoPlist": {
@@ -24,7 +24,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.emilyapp.haven"
     },
     "web": {
       "output": "static",

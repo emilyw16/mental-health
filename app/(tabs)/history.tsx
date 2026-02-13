@@ -1,42 +1,185 @@
-import { Calendar, Flame, Lightbulb, Target } from "lucide-react-native";
-import { ScrollView, useColorScheme, View } from "react-native";
+import { Calendar, Flame, Target } from "lucide-react-native";
+import { ScrollView, useColorScheme, View, Alert, ActivityIndicator } from "react-native";
+import { useCallback, useState, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { supabase } from "~/lib/supabase";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+/** Parse YYYY-MM-DD as local date to avoid timezone shift when displaying */
+function formatLocalDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString();
+}
 
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
 import { Text } from "~/components/ui/text";
 
-const stats = [
-  {
-    label: "Day Streak",
-    value: "0",
-    icon: Flame,
-    bgColor: "bg-primary-50/50",
-    iconColor: "#3b82f6",
-  },
-  {
-    label: "This Week",
-    value: "0/7",
-    icon: Target,
-    bgColor: "bg-success/30",
-    iconColor: "#22c55e",
-  },
-  {
-    label: "Total Weeks",
-    value: "0",
-    icon: Calendar,
-    bgColor: "bg-muted",
-    iconColor: "#6b7280",
-  },
-];
+const SEED_FLAG = 'seed-2026-02-09-movement';
 
 export default function HistoryScreen() {
   const colorScheme = useColorScheme();
   const mutedIconColor = colorScheme === "dark" ? "#9ca3af" : "#6b7280";
+  const [checkIns, setCheckIns] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dayStreak, setDayStreak] = useState(0);
+
+  useEffect(() => {
+    const seedYesterdayMovement = async () => {
+      try {
+        const alreadySeeded = await AsyncStorage.getItem(SEED_FLAG);
+        if (alreadySeeded === 'true') {
+          return;
+        }
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const yesterday = '2026-02-09';
+        const { data, error } = await supabase
+          .from('check_ins')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('log_type', 'movement')
+          .eq('check_in_date', yesterday);
+
+        if (error) {
+          console.error('Error checking for seed data:', error);
+          return;
+        }
+
+        if (data.length === 0) {
+          const notes = `
+            Movement: 30 minutes
+            Intensity: medium
+            Physical Pain: none
+          `;
+          await supabase.from('check_ins').insert({
+            user_id: user.id,
+            check_in_date: yesterday,
+            log_type: 'movement',
+            energy_level: 3,
+            notes: notes.trim(),
+            sleep_quality: 'okay',
+            social_interaction: 'no_interaction',
+          });
+        }
+        await AsyncStorage.setItem(SEED_FLAG, 'true');
+      } catch (e) {
+        console.error('Failed to seed data:', e);
+      }
+    };
+
+    seedYesterdayMovement();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      const fetchCheckIns = async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            Alert.alert("Error", "You must be logged in to view your history.");
+            return;
+          }
+
+          const { data, error } = await supabase
+            .from("check_ins")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("check_in_date", { ascending: false });
+
+          if (!cancelled) {
+            if (error) {
+              Alert.alert("Error", "Failed to fetch check-ins: " + error.message);
+            } else {
+              setCheckIns(data ?? []);
+              calculateDayStreak(data ?? []);
+            }
+          }
+        } catch (error) {
+          if (!cancelled) Alert.alert("Error", "An unexpected error occurred.");
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      };
+
+      setLoading(true);
+      fetchCheckIns();
+      return () => { cancelled = true; };
+    }, [])
+  );
+
+  const calculateDayStreak = (data: any[]) => {
+    if (data.length === 0) {
+      setDayStreak(0);
+      return;
+    }
+
+    const uniqueDates = [...new Set(data.map(d => d.check_in_date))].sort().reverse();
+    const sortedDates = uniqueDates.map(s => {
+      const [y, m, d] = s.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    });
+    let streak = 1;
+    let lastDate = sortedDates[0];
+
+    for (let i = 1; i < sortedDates.length; i++) {
+      const currentDate = sortedDates[i];
+      const diffTime = lastDate.getTime() - currentDate.getTime();
+      const diffDays = diffTime / (1000 * 3600 * 24);
+
+      if (diffDays > 0 && diffDays <= 1) {
+        streak++;
+        lastDate = currentDate;
+      } else if (diffDays > 1) {
+        break;
+      }
+    }
+
+    setDayStreak(streak);
+  };
+  const weeklyCheckIns = checkIns.filter(d => {
+      const today = new Date();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(endOfWeek.getDate() + 6);
+      const startStr = startOfWeek.getFullYear() + "-" + String(startOfWeek.getMonth() + 1).padStart(2, "0") + "-" + String(startOfWeek.getDate()).padStart(2, "0");
+      const endStr = endOfWeek.getFullYear() + "-" + String(endOfWeek.getMonth() + 1).padStart(2, "0") + "-" + String(endOfWeek.getDate()).padStart(2, "0");
+      const dateStr = d.check_in_date;
+      return dateStr >= startStr && dateStr <= endStr;
+    });
+
+
+  const stats = [
+    {
+      label: "Day Streak",
+      value: dayStreak.toString(),
+      icon: Flame,
+      bgColor: "bg-primary-50/50",
+      iconColor: "#3b82f6",
+    },
+    {
+      label: "This Week",
+      value: `${new Set(weeklyCheckIns.map((d: { check_in_date: string }) => d.check_in_date)).size}/7`,
+      icon: Target,
+      bgColor: "bg-success/30",
+      iconColor: "#22c55e",
+    },
+    {
+      label: "Total Weeks",
+      value: "0", // This would require more complex logic
+      icon: Calendar,
+      bgColor: "bg-muted",
+      iconColor: "#6b7280",
+    },
+  ];
 
   return (
     <ScrollView
@@ -78,42 +221,48 @@ export default function HistoryScreen() {
         {/* Recent Activity Section */}
         <View className="gap-4">
           <Text className="font-semibold text-lg">Recent Activity</Text>
-          <Card className="border border-border">
-            <CardContent className="items-center gap-3 py-8">
-              <View className="h-12 w-12 items-center justify-center rounded-full bg-muted">
-                <Calendar size={24} color={mutedIconColor} />
-              </View>
-              <Text className="text-center text-muted-foreground">
-                Your check-ins will appear here
-              </Text>
-            </CardContent>
-          </Card>
-        </View>
+          {loading ? (
+            <ActivityIndicator size="large" color={mutedIconColor} />
+          ) : checkIns.length === 0 ? (
+            <Card className="border border-border">
+              <CardContent className="items-center gap-3 py-8">
+                <View className="h-12 w-12 items-center justify-center rounded-full bg-muted">
+                  <Calendar size={24} color={mutedIconColor} />
+                </View>
+                <Text className="text-center text-muted-foreground">
+                  Your check-ins will appear here
+                </Text>
+              </CardContent>
+            </Card>
+          ) : (
+            <View className="gap-4">
+              {checkIns.map((checkIn) => {
+                const logType = checkIn.log_type ?? (checkIn.notes?.includes("Interactions:") ? "social" : "sleep");
+                
+                let notesToDisplay = checkIn.notes || '';
+                if (logType === 'movement') {
+                  const notesLines = notesToDisplay.split('\n').map(line => line.trim());
+                  const intensityIndex = notesLines.findIndex(line => line.startsWith('Intensity:'));
+                  notesLines.splice(intensityIndex + 1, 0, `Energy Level: ${checkIn.energy_level}`);
+                  notesToDisplay = notesLines.join('\n');
+                } else if (logType === 'social') {
+                  notesToDisplay = notesToDisplay.split('\n').map(line => line.trim()).join('\n');
+                }
 
-        {/* Weekly Insights Card */}
-        <Card className="border border-border bg-muted/30">
-          <CardHeader>
-            <View className="flex-row items-center gap-3">
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-primary-50">
-                <Lightbulb size={20} color="#3b82f6" />
-              </View>
-              <View className="flex-1 gap-1">
-                <CardTitle>Weekly Insights</CardTitle>
-                <CardDescription>
-                  Patterns we notice in your data
-                </CardDescription>
-              </View>
+                return (
+                  <Card key={checkIn.id} className="border border-border">
+                    <CardHeader>
+                      <CardTitle>{formatLocalDate(checkIn.check_in_date)} · {logType}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="gap-2">
+                      <Text className="text-muted-foreground">{notesToDisplay}</Text>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </View>
-          </CardHeader>
-          <CardContent>
-            <View className="rounded-lg bg-background/50 p-4">
-              <Text className="text-center text-muted-foreground text-sm">
-                Complete at least 3 check-ins this week to unlock your first
-                insight
-              </Text>
-            </View>
-          </CardContent>
-        </Card>
+          )}
+        </View>
       </View>
     </ScrollView>
   );

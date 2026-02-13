@@ -61,7 +61,7 @@ CREATE TYPE public.sleep_quality_enum AS ENUM ('well_rested', 'okay', 'restless'
 CREATE TYPE public.social_interaction_enum AS ENUM ('meaningful_connection', 'brief_interaction', 'no_interaction', 'avoided_people');
 
 CREATE TABLE public.check_ins (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     check_in_date DATE NOT NULL,
     sleep_quality public.sleep_quality_enum NOT NULL,
@@ -101,7 +101,7 @@ WITH CHECK (user_id = auth.uid());
 CREATE TYPE public.notification_method_enum AS ENUM ('email', 'sms', 'both');
 
 CREATE TABLE public.trusted_contacts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     contact_name TEXT NOT NULL,
     contact_email TEXT,
@@ -130,6 +130,7 @@ TO authenticated
 WITH CHECK (user_id = auth.uid());
 
 -- Policy for 'trusted_contacts' table: Users can update their own trusted contacts
+CREATE POLICY "Users can update their own trusted_contacts"
 ON public.trusted_contacts
 FOR UPDATE
 TO authenticated
@@ -145,7 +146,7 @@ USING (user_id = auth.uid());
 
 -- Create the 'alerts_sent' table
 CREATE TABLE public.alerts_sent (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     contact_id UUID NOT NULL REFERENCES public.trusted_contacts(id) ON DELETE CASCADE,
     alert_type TEXT NOT NULL, -- e.g., 'sleep_disrupted', 'social_reduced'
