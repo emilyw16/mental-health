@@ -11,7 +11,7 @@
     "ios": {
       "bundleIdentifier": "com.emily-app.haven",
       "usesAppleSignIn": true,
-      "supportsTablet": true,
+      "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
