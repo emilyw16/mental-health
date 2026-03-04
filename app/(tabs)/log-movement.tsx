@@ -1,10 +1,9 @@
-import { View, Alert, ScrollView } from "react-native";
-import { Text } from "~/components/ui/text";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { Alert, ScrollView, View } from "react-native";
 import { Button } from "~/components/ui/button";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { Label } from "~/components/ui/label";
-import { getLocalDateString } from "~/lib/date-utils";
 import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -12,9 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { useEffect, useState } from "react";
-import { supabase } from "~/lib/supabase";
+import { Text } from "~/components/ui/text";
+import { getLocalDateString } from "~/lib/date-utils";
 import { parseSelectValue, toSelectOption } from "~/lib/select-utils";
+import { supabase } from "~/lib/supabase";
 
 const energyLevels = [
   { label: "1 (Lowest)", value: "1" },
@@ -43,7 +43,7 @@ export default function LogMovementScreen() {
   const [movementMinutes, setMovementMinutes] = useState("");
   const [intensity, setIntensity] = useState<string | null>(null);
   const [physicalPainLevel, setPhysicalPainLevel] = useState<string | null>(
-    null
+    null,
   );
   const [energyLevel, setEnergyLevel] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -58,7 +58,9 @@ export default function LogMovementScreen() {
   useEffect(() => {
     let cancelled = false;
     const loadExisting = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user || cancelled) return;
       const today = getLocalDateString();
       const { data } = await supabase
@@ -74,12 +76,19 @@ export default function LogMovementScreen() {
         const intensityMatch = data.notes?.match(/Intensity: (\w+)/);
         const painMatch = data.notes?.match(/Physical Pain: (\w+)/);
         if (movementMatch) setMovementMinutes(movementMatch[1]);
-        if (intensityMatch && intensityLevels.some(o => o.value === intensityMatch[1])) setIntensity(intensityMatch[1]);
-        if (painMatch && painLevels.some(o => o.value === painMatch[1])) setPhysicalPainLevel(painMatch[1]);
+        if (
+          intensityMatch &&
+          intensityLevels.some((o) => o.value === intensityMatch[1])
+        )
+          setIntensity(intensityMatch[1]);
+        if (painMatch && painLevels.some((o) => o.value === painMatch[1]))
+          setPhysicalPainLevel(painMatch[1]);
       }
     };
     loadExisting();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleSave = async () => {
@@ -116,14 +125,12 @@ export default function LogMovementScreen() {
       social_interaction: "no_interaction" as const,
     };
 
-    const { error } = await supabase
-      .from("check_ins")
-      .upsert(checkInData, {
-        onConflict: "user_id,check_in_date,log_type",
-      });
+    const { error } = await supabase.from("check_ins").upsert(checkInData, {
+      onConflict: "user_id,check_in_date,log_type",
+    });
 
     if (error) {
-      Alert.alert("Error", "Failed to save movement log: " + error.message);
+      Alert.alert("Error", `Failed to save movement log: ${error.message}`);
     } else {
       resetForm();
       Alert.alert("Success", "Movement log saved successfully.");
@@ -141,7 +148,7 @@ export default function LogMovementScreen() {
       className="flex-1 bg-background"
       contentContainerClassName="p-6 gap-4"
     >
-      <Text className="text-2xl font-semibold">Log Movement</Text>
+      <Text className="font-semibold text-2xl">Log Movement</Text>
       <View className="gap-2">
         <Label>How many minutes of movement did you get?</Label>
         <Input

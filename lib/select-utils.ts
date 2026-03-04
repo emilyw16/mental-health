@@ -8,7 +8,7 @@ export type SelectOption = { value: string; label: string };
 
 /** Normalize Select onValueChange payload to a string (native sends { value, label }). */
 export function parseSelectValue(
-  value: string | SelectOption | undefined
+  value: string | SelectOption | undefined,
 ): string | undefined {
   if (value == null) return undefined;
   if (typeof value === "string") return value;
@@ -18,7 +18,7 @@ export function parseSelectValue(
 /** Build the Option shape for Select's value prop from current string + options list. */
 export function toSelectOption(
   value: string | null | undefined,
-  options: SelectOption[]
+  options: SelectOption[],
 ): SelectOption | undefined {
   if (value == null) return undefined;
   const option = options.find((o) => o.value === value);

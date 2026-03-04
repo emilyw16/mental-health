@@ -1,7 +1,7 @@
 import { PortalHost } from "@rn-primitives/portal";
 import { Stack, useRouter, useSegments } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,9 +17,9 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const router = useRouter();
-  const segments = useSegments();
-  const { isAuthenticated, isAuthenticatedLoading } = useAuth();
+  const _router = useRouter();
+  const _segments = useSegments();
+  const { isAuthenticatedLoading } = useAuth();
 
   useEffect(() => {
     if (isAuthenticatedLoading) return;
@@ -29,7 +29,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (isAuthenticatedLoading) return;
     // isAuthenticated, isAuthenticatedLoading, segments, router
-  }, [isAuthenticated, isAuthenticatedLoading, segments, router]);
+  }, [isAuthenticatedLoading]);
 
   return (
     <GestureHandlerRootView className="flex-1">

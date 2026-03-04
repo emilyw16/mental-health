@@ -95,7 +95,7 @@ export default function ProfileScreen() {
               You&apos;re signed in
             </Text>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex-col gap-3">
             <Button
               variant="outline"
               className="w-full"
@@ -103,6 +103,11 @@ export default function ProfileScreen() {
             >
               <Text>Sign Out</Text>
             </Button>
+            <Link href="/(auth)/delete-account" asChild>
+              <Button variant="destructive" className="w-full">
+                <Text>Delete Account</Text>
+              </Button>
+            </Link>
           </CardFooter>
         </Card>
       </View>

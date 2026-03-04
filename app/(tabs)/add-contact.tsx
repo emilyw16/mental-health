@@ -1,10 +1,10 @@
-import { View, Alert } from "react-native";
-import { Text } from "~/components/ui/text";
-import { Input } from "~/components/ui/input";
-import { Button } from "~/components/ui/button";
 import { useRouter } from "expo-router";
-import { Label } from "~/components/ui/label";
 import { useState } from "react";
+import { Alert, View } from "react-native";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Text } from "~/components/ui/text";
 import { supabase } from "~/lib/supabase";
 
 export default function AddContactScreen() {
@@ -35,7 +35,7 @@ export default function AddContactScreen() {
     });
 
     if (error) {
-      Alert.alert("Error", "Failed to save contact: " + error.message);
+      Alert.alert("Error", `Failed to save contact: ${error.message}`);
     } else {
       setName("");
       setEmail("");
@@ -47,8 +47,8 @@ export default function AddContactScreen() {
   };
 
   return (
-    <View className="flex-1 gap-4 p-6 bg-background">
-      <Text className="text-2xl font-semibold">Add Trusted Contact</Text>
+    <View className="flex-1 gap-4 bg-background p-6">
+      <Text className="font-semibold text-2xl">Add Trusted Contact</Text>
       <View className="gap-2">
         <Label>Name</Label>
         <Input

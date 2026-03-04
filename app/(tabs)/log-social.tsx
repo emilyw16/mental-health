@@ -1,9 +1,9 @@
-import { View, Alert, ScrollView } from "react-native";
-import { Text } from "~/components/ui/text";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { Alert, ScrollView, View } from "react-native";
 import { Button } from "~/components/ui/button";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { getLocalDateString } from "~/lib/date-utils";
 import {
   Select,
   SelectContent,
@@ -11,10 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Input } from "~/components/ui/input";
-import { useEffect, useState } from "react";
-import { supabase } from "~/lib/supabase";
+import { Text } from "~/components/ui/text";
+import { getLocalDateString } from "~/lib/date-utils";
 import { parseSelectValue, toSelectOption } from "~/lib/select-utils";
+import { supabase } from "~/lib/supabase";
 
 type InteractionQuality = "good" | "medium" | "bad";
 type InteractionFeeling =
@@ -54,7 +54,7 @@ export default function LogSocialScreen() {
   const [quality, setQuality] = useState<InteractionQuality | null>(null);
   const [feeling, setFeeling] = useState<InteractionFeeling | null>(null);
   const [emotionalPainLevel, setEmotionalPainLevel] = useState<string | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState(false);
 
@@ -68,7 +68,9 @@ export default function LogSocialScreen() {
   useEffect(() => {
     let cancelled = false;
     const loadExisting = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user || cancelled) return;
       const today = getLocalDateString();
       const { data } = await supabase
@@ -84,13 +86,21 @@ export default function LogSocialScreen() {
         const feelingMatch = data.notes.match(/Feeling: (\w+)/);
         const painMatch = data.notes.match(/Emotional Pain: (\w+)/);
         if (interactionsMatch) setInteractions(interactionsMatch[1]);
-        if (qualityMatch && ["good", "medium", "bad"].includes(qualityMatch[1])) setQuality(qualityMatch[1] as InteractionQuality);
-        if (feelingMatch && feelingOptions.some(o => o.value === feelingMatch[1])) setFeeling(feelingMatch[1] as InteractionFeeling);
-        if (painMatch && painLevels.some(o => o.value === painMatch[1])) setEmotionalPainLevel(painMatch[1]);
+        if (qualityMatch && ["good", "medium", "bad"].includes(qualityMatch[1]))
+          setQuality(qualityMatch[1] as InteractionQuality);
+        if (
+          feelingMatch &&
+          feelingOptions.some((o) => o.value === feelingMatch[1])
+        )
+          setFeeling(feelingMatch[1] as InteractionFeeling);
+        if (painMatch && painLevels.some((o) => o.value === painMatch[1]))
+          setEmotionalPainLevel(painMatch[1]);
       }
     };
     loadExisting();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const mapQualityToEnum = (quality: InteractionQuality) => {
@@ -139,17 +149,12 @@ export default function LogSocialScreen() {
       energy_level: 3,
     };
 
-    const { error } = await supabase
-      .from("check_ins")
-      .upsert(checkInData, {
-        onConflict: "user_id,check_in_date,log_type",
-      });
+    const { error } = await supabase.from("check_ins").upsert(checkInData, {
+      onConflict: "user_id,check_in_date,log_type",
+    });
 
     if (error) {
-      Alert.alert(
-        "Error",
-        "Failed to save social log: " + error.message
-      );
+      Alert.alert("Error", `Failed to save social log: ${error.message}`);
     } else {
       resetForm();
       Alert.alert("Success", "Social log saved successfully.");
@@ -167,7 +172,7 @@ export default function LogSocialScreen() {
       className="flex-1 bg-background"
       contentContainerClassName="p-6 gap-4"
     >
-      <Text className="text-2xl font-semibold">Log Social Activity</Text>
+      <Text className="font-semibold text-2xl">Log Social Activity</Text>
       <View className="gap-2">
         <Label>How many social interactions did you have?</Label>
         <Input
@@ -187,7 +192,10 @@ export default function LogSocialScreen() {
           value={toSelectOption(quality, qualityOptions)}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select quality" className="text-foreground" />
+            <SelectValue
+              placeholder="Select quality"
+              className="text-foreground"
+            />
           </SelectTrigger>
           <SelectContent portalHost="RootPortalHost">
             {qualityOptions.map((option) => (
@@ -210,7 +218,10 @@ export default function LogSocialScreen() {
           value={toSelectOption(feeling, feelingOptions)}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select feeling" className="text-foreground" />
+            <SelectValue
+              placeholder="Select feeling"
+              className="text-foreground"
+            />
           </SelectTrigger>
           <SelectContent portalHost="RootPortalHost">
             {feelingOptions.map((option) => (

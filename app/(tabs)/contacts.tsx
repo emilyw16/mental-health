@@ -1,10 +1,14 @@
-import { Bell, Heart, Shield, Users } from "lucide-react-native";
-import { ScrollView, useColorScheme, View, ActivityIndicator, Alert } from "react-native";
-import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { supabase } from "~/lib/supabase";
-
+import { useRouter } from "expo-router";
+import { Bell, Heart, Shield, Users } from "lucide-react-native";
+import { useCallback, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  useColorScheme,
+  View,
+} from "react-native";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -14,6 +18,7 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { Text } from "~/components/ui/text";
+import { supabase } from "~/lib/supabase";
 
 const steps = [
   {
@@ -56,18 +61,23 @@ export default function ContactsScreen() {
       let cancelled = false;
       const fetchContacts = async () => {
         try {
-          const { data: { user } } = await supabase.auth.getUser();
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
           if (!user) {
             setLoading(false);
             return;
           }
           const { data, error } = await supabase
             .from("trusted_contacts")
-            .select("id, contact_name, contact_email, contact_phone, relationship")
+            .select(
+              "id, contact_name, contact_email, contact_phone, relationship",
+            )
             .eq("user_id", user.id)
             .order("created_at", { ascending: false });
           if (!cancelled) {
-            if (error) Alert.alert("Error", "Failed to load contacts: " + error.message);
+            if (error)
+              Alert.alert("Error", `Failed to load contacts: ${error.message}`);
             else setContacts(data ?? []);
           }
         } finally {
@@ -76,8 +86,10 @@ export default function ContactsScreen() {
       };
       setLoading(true);
       fetchContacts();
-      return () => { cancelled = true; };
-    }, [])
+      return () => {
+        cancelled = true;
+      };
+    }, []),
   );
 
   return (
@@ -111,7 +123,10 @@ export default function ContactsScreen() {
                   Add people you trust to be part of your support network
                 </Text>
               </View>
-              <Button className="mt-2" onPress={() => router.push("/(tabs)/add-contact")}>
+              <Button
+                className="mt-2"
+                onPress={() => router.push("/(tabs)/add-contact")}
+              >
                 <Text>Add Your First Contact</Text>
               </Button>
             </CardContent>
@@ -125,17 +140,24 @@ export default function ContactsScreen() {
                     <Users size={20} color={iconColor} />
                   </View>
                   <View className="flex-1">
-                    <CardTitle className="text-base">{contact.contact_name}</CardTitle>
+                    <CardTitle className="text-base">
+                      {contact.contact_name}
+                    </CardTitle>
                     {(contact.contact_email || contact.contact_phone) && (
                       <CardDescription>
-                        {[contact.contact_email, contact.contact_phone].filter(Boolean).join(" · ")}
+                        {[contact.contact_email, contact.contact_phone]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </CardDescription>
                     )}
                   </View>
                 </CardHeader>
               </Card>
             ))}
-            <Button variant="outline" onPress={() => router.push("/(tabs)/add-contact")}>
+            <Button
+              variant="outline"
+              onPress={() => router.push("/(tabs)/add-contact")}
+            >
               <Text>Add Another Contact</Text>
             </Button>
           </View>

@@ -1,14 +1,14 @@
-import { View } from "react-native";
-import { Text } from "~/components/ui/text";
-import { Button } from "~/components/ui/button";
 import { useRouter } from "expo-router";
+import { View } from "react-native";
+import { Button } from "~/components/ui/button";
+import { Text } from "~/components/ui/text";
 
 export default function CheckInScreen() {
   const router = useRouter();
 
   return (
-    <View className="flex-1 gap-4 p-6 bg-background">
-      <Text className="text-2xl font-semibold">Today's Check-in</Text>
+    <View className="flex-1 gap-4 bg-background p-6">
+      <Text className="font-semibold text-2xl">Today&apos;s Check-in</Text>
       <Button onPress={() => router.push("/(tabs)/log-sleep?from=check-in")}>
         <Text>Log Sleep</Text>
       </Button>

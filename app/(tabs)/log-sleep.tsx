@@ -1,9 +1,9 @@
-import { View, Alert } from "react-native";
-import { Text } from "~/components/ui/text";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { Alert, View } from "react-native";
 import { Button } from "~/components/ui/button";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { getLocalDateString } from "~/lib/date-utils";
 import {
   Select,
   SelectContent,
@@ -11,10 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Input } from "~/components/ui/input";
-import { useEffect, useState } from "react";
-import { supabase } from "~/lib/supabase";
+import { Text } from "~/components/ui/text";
+import { getLocalDateString } from "~/lib/date-utils";
 import { parseSelectValue, toSelectOption } from "~/lib/select-utils";
+import { supabase } from "~/lib/supabase";
 
 type SleepQuality =
   | "well_rested"
@@ -46,7 +46,9 @@ export default function LogSleepScreen() {
   useEffect(() => {
     let cancelled = false;
     const loadExisting = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user || cancelled) return;
       const today = getLocalDateString();
       const { data } = await supabase
@@ -63,7 +65,9 @@ export default function LogSleepScreen() {
       }
     };
     loadExisting();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleSave = async () => {
@@ -94,14 +98,12 @@ export default function LogSleepScreen() {
       notes: `Slept for ${hours} hours.`,
     };
 
-    const { error } = await supabase
-      .from("check_ins")
-      .upsert(checkInData, {
-        onConflict: "user_id,check_in_date,log_type",
-      });
+    const { error } = await supabase.from("check_ins").upsert(checkInData, {
+      onConflict: "user_id,check_in_date,log_type",
+    });
 
     if (error) {
-      Alert.alert("Error", "Failed to save sleep log: " + error.message);
+      Alert.alert("Error", `Failed to save sleep log: ${error.message}`);
     } else {
       resetForm();
       Alert.alert("Success", "Sleep log saved successfully.");
@@ -115,8 +117,8 @@ export default function LogSleepScreen() {
   };
 
   return (
-    <View className="flex-1 gap-4 p-6 bg-background">
-      <Text className="text-2xl font-semibold">Log Sleep</Text>
+    <View className="flex-1 gap-4 bg-background p-6">
+      <Text className="font-semibold text-2xl">Log Sleep</Text>
       <View className="gap-2">
         <Label>How would you describe your sleep?</Label>
         <Select
@@ -134,7 +136,11 @@ export default function LogSleepScreen() {
           </SelectTrigger>
           <SelectContent portalHost="RootPortalHost">
             {sleepQualityOptions.map((option) => (
-              <SelectItem key={option.value} label={option.label} value={option.value} />
+              <SelectItem
+                key={option.value}
+                label={option.label}
+                value={option.value}
+              />
             ))}
           </SelectContent>
         </Select>

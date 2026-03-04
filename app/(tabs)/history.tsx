@@ -1,9 +1,18 @@
-import { Calendar, Flame, Target } from "lucide-react-native";
-import { ScrollView, useColorScheme, View, Alert, ActivityIndicator } from "react-native";
-import { useCallback, useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
+import { Calendar, Flame, Target } from "lucide-react-native";
+import { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  useColorScheme,
+  View,
+} from "react-native";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Text } from "~/components/ui/text";
 import { supabase } from "~/lib/supabase";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { CheckIn } from "~/types";
 
 /** Parse YYYY-MM-DD as local date to avoid timezone shift when displaying */
 function formatLocalDate(dateStr: string): string {
@@ -11,20 +20,12 @@ function formatLocalDate(dateStr: string): string {
   return new Date(y, m - 1, d).toLocaleDateString();
 }
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
-import { Text } from "~/components/ui/text";
-
-const SEED_FLAG = 'seed-2026-02-09-movement';
+const SEED_FLAG = "seed-2026-02-09-movement";
 
 export default function HistoryScreen() {
   const colorScheme = useColorScheme();
   const mutedIconColor = colorScheme === "dark" ? "#9ca3af" : "#6b7280";
-  const [checkIns, setCheckIns] = useState<any[]>([]);
+  const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [loading, setLoading] = useState(true);
   const [dayStreak, setDayStreak] = useState(0);
 
@@ -32,23 +33,25 @@ export default function HistoryScreen() {
     const seedYesterdayMovement = async () => {
       try {
         const alreadySeeded = await AsyncStorage.getItem(SEED_FLAG);
-        if (alreadySeeded === 'true') {
+        if (alreadySeeded === "true") {
           return;
         }
 
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (!user) return;
 
-        const yesterday = '2026-02-09';
+        const yesterday = "2026-02-09";
         const { data, error } = await supabase
-          .from('check_ins')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('log_type', 'movement')
-          .eq('check_in_date', yesterday);
+          .from("check_ins")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("log_type", "movement")
+          .eq("check_in_date", yesterday);
 
         if (error) {
-          console.error('Error checking for seed data:', error);
+          console.error("Error checking for seed data:", error);
           return;
         }
 
@@ -58,71 +61,35 @@ export default function HistoryScreen() {
             Intensity: medium
             Physical Pain: none
           `;
-          await supabase.from('check_ins').insert({
+          await supabase.from("check_ins").insert({
             user_id: user.id,
             check_in_date: yesterday,
-            log_type: 'movement',
+            log_type: "movement",
             energy_level: 3,
             notes: notes.trim(),
-            sleep_quality: 'okay',
-            social_interaction: 'no_interaction',
+            sleep_quality: "okay",
+            social_interaction: "no_interaction",
           });
         }
-        await AsyncStorage.setItem(SEED_FLAG, 'true');
+        await AsyncStorage.setItem(SEED_FLAG, "true");
       } catch (e) {
-        console.error('Failed to seed data:', e);
+        console.error("Failed to seed data:", e);
       }
     };
 
     seedYesterdayMovement();
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      let cancelled = false;
-      const fetchCheckIns = async () => {
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) {
-            Alert.alert("Error", "You must be logged in to view your history.");
-            return;
-          }
-
-          const { data, error } = await supabase
-            .from("check_ins")
-            .select("*")
-            .eq("user_id", user.id)
-            .order("check_in_date", { ascending: false });
-
-          if (!cancelled) {
-            if (error) {
-              Alert.alert("Error", "Failed to fetch check-ins: " + error.message);
-            } else {
-              setCheckIns(data ?? []);
-              calculateDayStreak(data ?? []);
-            }
-          }
-        } catch (error) {
-          if (!cancelled) Alert.alert("Error", "An unexpected error occurred.");
-        } finally {
-          if (!cancelled) setLoading(false);
-        }
-      };
-
-      setLoading(true);
-      fetchCheckIns();
-      return () => { cancelled = true; };
-    }, [])
-  );
-
-  const calculateDayStreak = (data: any[]) => {
+  const calculateDayStreak = useCallback((data: CheckIn[]) => {
     if (data.length === 0) {
       setDayStreak(0);
       return;
     }
 
-    const uniqueDates = [...new Set(data.map(d => d.check_in_date))].sort().reverse();
-    const sortedDates = uniqueDates.map(s => {
+    const uniqueDates = [...new Set(data.map((d) => d.check_in_date))]
+      .sort()
+      .reverse();
+    const sortedDates = uniqueDates.map((s) => {
       const [y, m, d] = s.split("-").map(Number);
       return new Date(y, m - 1, d);
     });
@@ -143,19 +110,73 @@ export default function HistoryScreen() {
     }
 
     setDayStreak(streak);
-  };
-  const weeklyCheckIns = checkIns.filter(d => {
-      const today = new Date();
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(endOfWeek.getDate() + 6);
-      const startStr = startOfWeek.getFullYear() + "-" + String(startOfWeek.getMonth() + 1).padStart(2, "0") + "-" + String(startOfWeek.getDate()).padStart(2, "0");
-      const endStr = endOfWeek.getFullYear() + "-" + String(endOfWeek.getMonth() + 1).padStart(2, "0") + "-" + String(endOfWeek.getDate()).padStart(2, "0");
-      const dateStr = d.check_in_date;
-      return dateStr >= startStr && dateStr <= endStr;
-    });
+  }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      const fetchCheckIns = async () => {
+        try {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          if (!user) {
+            Alert.alert("Error", "You must be logged in to view your history.");
+            return;
+          }
+
+          const { data, error } = await supabase
+            .from("check_ins")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("check_in_date", { ascending: false });
+
+          if (!cancelled) {
+            if (error) {
+              Alert.alert(
+                "Error",
+                `Failed to fetch check-ins: ${error.message}`,
+              );
+            } else {
+              setCheckIns(data ?? []);
+              calculateDayStreak(data ?? []);
+            }
+          }
+        } catch (_error) {
+          if (!cancelled) Alert.alert("Error", "An unexpected error occurred.");
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      };
+
+      setLoading(true);
+      fetchCheckIns();
+      return () => {
+        cancelled = true;
+      };
+    }, [calculateDayStreak]),
+  );
+  const weeklyCheckIns = checkIns.filter((d) => {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
+    const startStr =
+      startOfWeek.getFullYear() +
+      "-" +
+      String(startOfWeek.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(startOfWeek.getDate()).padStart(2, "0");
+    const endStr =
+      endOfWeek.getFullYear() +
+      "-" +
+      String(endOfWeek.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(endOfWeek.getDate()).padStart(2, "0");
+    const dateStr = d.check_in_date;
+    return dateStr >= startStr && dateStr <= endStr;
+  });
 
   const stats = [
     {
@@ -237,25 +258,44 @@ export default function HistoryScreen() {
           ) : (
             <View className="gap-4">
               {checkIns.map((checkIn) => {
-                const logType = checkIn.log_type ?? (checkIn.notes?.includes("Interactions:") ? "social" : "sleep");
-                
-                let notesToDisplay = checkIn.notes || '';
-                if (logType === 'movement') {
-                  const notesLines = notesToDisplay.split('\n').map(line => line.trim());
-                  const intensityIndex = notesLines.findIndex(line => line.startsWith('Intensity:'));
-                  notesLines.splice(intensityIndex + 1, 0, `Energy Level: ${checkIn.energy_level}`);
-                  notesToDisplay = notesLines.join('\n');
-                } else if (logType === 'social') {
-                  notesToDisplay = notesToDisplay.split('\n').map(line => line.trim()).join('\n');
+                const logType =
+                  checkIn.log_type ??
+                  (checkIn.notes?.includes("Interactions:")
+                    ? "social"
+                    : "sleep");
+
+                let notesToDisplay = checkIn.notes || "";
+                if (logType === "movement") {
+                  const notesLines = notesToDisplay
+                    .split("\n")
+                    .map((line) => line.trim());
+                  const intensityIndex = notesLines.findIndex((line) =>
+                    line.startsWith("Intensity:"),
+                  );
+                  notesLines.splice(
+                    intensityIndex + 1,
+                    0,
+                    `Energy Level: ${checkIn.energy_level}`,
+                  );
+                  notesToDisplay = notesLines.join("\n");
+                } else if (logType === "social") {
+                  notesToDisplay = notesToDisplay
+                    .split("\n")
+                    .map((line) => line.trim())
+                    .join("\n");
                 }
 
                 return (
                   <Card key={checkIn.id} className="border border-border">
                     <CardHeader>
-                      <CardTitle>{formatLocalDate(checkIn.check_in_date)} · {logType}</CardTitle>
+                      <CardTitle>
+                        {formatLocalDate(checkIn.check_in_date)} · {logType}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="gap-2">
-                      <Text className="text-muted-foreground">{notesToDisplay}</Text>
+                      <Text className="text-muted-foreground">
+                        {notesToDisplay}
+                      </Text>
                     </CardContent>
                   </Card>
                 );
