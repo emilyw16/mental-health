@@ -3,6 +3,8 @@
 __generated__
 web-build
 bare-apps
+dist/
+ios/
 
 # macOS
 .DS_Store

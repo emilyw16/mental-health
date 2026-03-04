@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "com.emily-app.haven",
+      "bundleIdentifier": "com.atlosmedia.haven",
       "usesAppleSignIn": true,
       "supportsTablet": true,
       "infoPlist": {
@@ -25,7 +25,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.emilyapp.haven"
+      "package": "com.atlosmedia.haven"
     },
     "web": {
       "output": "static",
@@ -56,6 +56,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a5f4ef33-be7a-41dd-8e76-dde3d5b8fd10"
+      }
     }
   }
 }
